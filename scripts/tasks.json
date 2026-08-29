@@ -1,0 +1,12 @@
+[
+  {
+    "name": "OpenArm Pedestal (MuJoCo)",
+    "prompt": "Teleoperate a simulated OpenArm on the pedestal from your browser.",
+    "runtime": "MuJoCo"
+  },
+  {
+    "name": "OpenArm Pedestal",
+    "prompt": "Teleoperate the real OpenArm on the pedestal from your browser.",
+    "runtime": "OpenArm Cell"
+  }
+]

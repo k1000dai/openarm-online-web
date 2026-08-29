@@ -16,7 +16,7 @@ from datetime import datetime, timezone
 from enum import StrEnum
 from typing import Optional
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel
 from sqlalchemy import DateTime, Text
 from sqlmodel import Column, Field, Relationship, SQLModel, func
 
@@ -118,17 +118,12 @@ class Runtime(StrEnum):
     MUJOCO = "MuJoCo"
 
 
-# MuJoCo runs in simulation, so it doesn't need a Docker image to reset
-# the environment; every other runtime does.
-def _check_reset_docker_tag(runtime: Runtime, reset_docker_tag: str | None):
-    if runtime != Runtime.MUJOCO and reset_docker_tag is None:
-        raise ValueError(f"reset_docker_tag is required for the {runtime} runtime")
-
-
 class Task(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     name: str = Field(min_length=1, max_length=255)
     prompt: str = Field(sa_type=Text)
+    # Unused since job evaluation was dropped; kept so the column stays
+    # in the schema.
     reset_docker_tag: str | None = Field(default=None, max_length=255)
     runtime: Runtime = Field(
         default=Runtime.OPENARM_CELL,
@@ -148,13 +143,6 @@ class Task(SQLModel, table=True):
     )
     submissions: list["Submission"] = Relationship(back_populates="task")
     webrtc_offers: list["WebRTCOffer"] = Relationship(back_populates="task")
-
-    # Runs on model_validate() (e.g. scripts/create_tasks.py), not on
-    # plain construction: SQLModel table models skip validation there.
-    @model_validator(mode="after")
-    def _validate_reset_docker_tag(self):
-        _check_reset_docker_tag(self.runtime, self.reset_docker_tag)
-        return self
 
 
 class Submission(SQLModel, table=True):

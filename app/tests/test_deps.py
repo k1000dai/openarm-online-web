@@ -21,12 +21,7 @@ def _mujoco_task() -> Task:
 
 
 def _openarm_cell_task() -> Task:
-    return Task(
-        name="task",
-        prompt="prompt",
-        runtime=Runtime.OPENARM_CELL,
-        reset_docker_tag="reset/image:latest",
-    )
+    return Task(name="task", prompt="prompt", runtime=Runtime.OPENARM_CELL)
 
 
 # MuJoCo runs in simulation, so anyone may teleoperate it.
