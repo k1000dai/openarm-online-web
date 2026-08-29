@@ -47,15 +47,20 @@ ENV PATH="/runner/.venv/bin:$PATH"
 ENV PYTHONPATH="/runner/src"
 RUN uv python install 3.14
 
-RUN git clone --recurse-submodules --shallow-submodules --depth 1 \
-    https://github.com/enactic/openarm-online-runner.git /runner
+RUN git clone --branch miraikan --recurse-submodules --shallow-submodules --depth 1 \
+    https://github.com/k1000dai/openarm-online-runner.git /runner
 
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync
 
-ENV DATAFLOW_FILE=/runner/tests/dataflow.yaml
-ENV RECORDER_BASE_DIRECTORY=/runner/tmp
+# The server is teleoperation only: no job queue to poll, and the
+# MuJoCo pedestal dataflows as defaults. .env.runner can override
+# these, e.g. to drive the real pedestal robot.
+ENV JOBS_ENABLED=false
+ENV DEFAULT_KEYBOARD_TELEOPERATION_DATAFLOW_FILE=/runner/dataflows/teleoperation/keyboard/pedestal-mujoco/dataflow.yaml
+ENV DEFAULT_WEBXR_TELEOPERATION_DATAFLOW_FILE=/runner/dataflows/teleoperation/webxr/pedestal-mujoco/dataflow.yaml
 
-RUN uv run dora build "${DATAFLOW_FILE}" --uv
+RUN uv run dora build "${DEFAULT_KEYBOARD_TELEOPERATION_DATAFLOW_FILE}" --uv \
+    && uv run dora build "${DEFAULT_WEBXR_TELEOPERATION_DATAFLOW_FILE}" --uv
 
 CMD ["uv", "run", "openarm-online-runner"]
