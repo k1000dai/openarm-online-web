@@ -23,8 +23,10 @@ RUN apt update \
         build-essential \
         ffmpeg \
         git \
+        libegl-mesa0 \
         libegl1 \
         libgl1 \
+        libgl1-mesa-dri \
         libosmesa6 \
         software-properties-common \
     && add-apt-repository -y ppa:openarm/main \
@@ -55,10 +57,11 @@ RUN git clone --branch miraikan --recurse-submodules --shallow-submodules --dept
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync
 
-# MuJoCo renders the browser view offscreen; OSMesa is the software
-# renderer that needs no GPU in the container. Override via .env.runner
-# (e.g. MUJOCO_GL=egl) when a GPU is available.
-ENV MUJOCO_GL=osmesa
+# MuJoCo renders the browser view offscreen on the GPU via headless
+# EGL; the compose service passes /dev/dri through for it. Fall back
+# to software rendering with MUJOCO_GL=osmesa in .env.runner on a
+# host without a usable GPU.
+ENV MUJOCO_GL=egl
 
 # The server is teleoperation only: no job queue to poll, and the
 # MuJoCo cell dataflows as defaults (the released openarm-mujoco cell

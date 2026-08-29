@@ -124,6 +124,9 @@ services:
       context: .
       dockerfile: e2e/runner.Containerfile
     shm_size: 512mb
+    devices:
+      # GPU render nodes for MuJoCo's headless EGL rendering.
+      - /dev/dri:/dev/dri
     env_file:
       - .env.runner
     restart: unless-stopped
