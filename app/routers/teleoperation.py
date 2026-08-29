@@ -20,7 +20,6 @@ from fastapi.responses import HTMLResponse
 from app import crud, turn
 from app.deps import (
     CurrentUserOptional,
-    NotAdmin,
     NotLoggedIn,
     SessionDep,
     may_teleoperate,
@@ -49,9 +48,7 @@ def teleoperation_keyboard_page(
     if task is None:
         return not_found(request, current_user)
     if not may_teleoperate(task, current_user):
-        if current_user is None:
-            raise NotLoggedIn()
-        raise NotAdmin()
+        raise NotLoggedIn()
     return templates.TemplateResponse(
         request,
         "teleoperation/keyboard.html",
@@ -82,9 +79,7 @@ def teleoperation_webxr_page(
     if task is None:
         return not_found(request, current_user)
     if not may_teleoperate(task, current_user):
-        if current_user is None:
-            raise NotLoggedIn()
-        raise NotAdmin()
+        raise NotLoggedIn()
     return templates.TemplateResponse(
         request,
         "teleoperation/webxr.html",
@@ -113,7 +108,7 @@ def create_webrtc_offer(
         raise HTTPException(status_code=404, detail="Task not found")
     if not may_teleoperate(task, current_user):
         raise HTTPException(
-            status_code=403, detail="Teleoperation of this task is admin only"
+            status_code=403, detail="Teleoperation of this task requires login"
         )
     crud.delete_stale_webrtc_offers(
         session=session, ttl=timedelta(seconds=settings.WEBRTC_OFFER_TTL)
@@ -139,7 +134,7 @@ def claim_webrtc_answer(
         raise HTTPException(status_code=404, detail="Offer not found")
     if not may_teleoperate(offer.task, current_user):
         raise HTTPException(
-            status_code=403, detail="Teleoperation of this task is admin only"
+            status_code=403, detail="Teleoperation of this task requires login"
         )
     answer = crud.find_webrtc_answer_by_offer_id(session=session, offer_id=offer_id)
     if answer is None:

@@ -2,7 +2,8 @@
 {% block title %}Login - {{ site_name }}{% endblock %}
 {% block content %}
   <h1>Login</h1>
-  <p>
-    <a href="{{ url_for('login_github') }}">Login with GitHub</a>
-  </p>
+  <p>No account is needed: logging in starts a guest session.</p>
+  <form method="post" action="{{ url_for('login_guest') }}">
+    <button type="submit">Login as guest</button>
+  </form>
 {% endblock %}

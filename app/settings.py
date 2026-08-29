@@ -14,23 +14,11 @@
 
 from urllib.parse import quote
 
-from pydantic import BaseModel, Field, PostgresDsn, computed_field, field_validator
+from pydantic import Field, PostgresDsn, computed_field
 from pydantic_settings import (
     BaseSettings,
-    PydanticBaseSettingsSource,
     SettingsConfigDict,
-    YamlConfigSettingsSource,
 )
-
-
-class AllowListSettings(BaseModel):
-    allowed_orgs: set[str] = Field(default_factory=set)
-    allowed_users: set[str] = Field(default_factory=set)
-
-    @field_validator("allowed_orgs", "allowed_users", mode="after")
-    @classmethod
-    def _to_lower(cls, value: set[str]) -> set[str]:
-        return {v.lower() for v in value}
 
 
 class Settings(BaseSettings):
@@ -38,7 +26,6 @@ class Settings(BaseSettings):
         env_file=".env",
         env_ignore_empty=True,
         extra="ignore",
-        yaml_file="config.yaml",
     )
 
     # These are the default values.
@@ -57,13 +44,6 @@ class Settings(BaseSettings):
     POSTGRES_USER: str = "openarm_online"
     POSTGRES_PASSWORD: str = "openarm-online"
 
-    GITHUB_AUTHORIZE_URL: str = "https://github.com/login/oauth/authorize"
-    GITHUB_TOKEN_URL: str = "https://github.com/login/oauth/access_token"
-    GITHUB_USER_URL: str = "https://api.github.com/user"
-
-    GITHUB_CLIENT_ID: str
-    GITHUB_CLIENT_SECRET: str
-
     SECRET_KEY: str
 
     API_KEY_PREFIX: str = "openarm-online-key-"
@@ -76,16 +56,6 @@ class Settings(BaseSettings):
     S3_SECRET_ACCESS_KEY: str | None = None
     S3_REGION: str = "us-east-1"
     S3_BUCKET_NAME: str = "openarm-online"
-
-    # Base URL of the Rerun web viewer.
-    # The version should match the Rerun SDK version used by
-    # the runner (openarm_dataset converter) to record the RRD file.
-    # See also: https://rerun.io/docs/howto/integrations/embed-web
-    RERUN_VIEWER_URL: str = "https://app.rerun.io/version/0.33.0/index.html"
-
-    JOBS_PER_SUBMISSION: int = Field(default=3, ge=1)
-    CLAIM_TIMEOUT: int = Field(default=30, ge=1)  # minutes
-    CLAIM_TIMEOUT_CHECK_INTERVAL: int = Field(default=5, ge=1)  # minutes
 
     # WebRTC offers older than this are stale: the browser stops polling
     # for an answer after about a minute, so nobody is waiting for them
@@ -103,14 +73,6 @@ class Settings(BaseSettings):
     # Lifetime of the minted TURN credentials.
     TURN_CREDENTIAL_TTL: int = Field(default=86400, ge=600)  # seconds
 
-    # Allow list for who may register submissions.
-    # When both are empty, every logged-in user is allowed.
-    submission: AllowListSettings = Field(default_factory=AllowListSettings)
-
-    # Allow list for who may use admin features.
-    # When both are empty, nobody is allowed.
-    admin: AllowListSettings = Field(default_factory=AllowListSettings)
-
     @computed_field  # type: ignore[prop-decorator]
     @property
     def SQLALCHEMY_DATABASE_URI(self) -> str:
@@ -123,23 +85,6 @@ class Settings(BaseSettings):
                 port=self.POSTGRES_PORT,
                 path=self.POSTGRES_DB,
             )
-        )
-
-    @classmethod
-    def settings_customise_sources(
-        cls,
-        settings_cls,
-        init_settings,
-        env_settings,
-        dotenv_settings,
-        file_secret_settings,
-    ) -> tuple[PydanticBaseSettingsSource, ...]:
-        return (
-            init_settings,
-            env_settings,
-            dotenv_settings,
-            YamlConfigSettingsSource(settings_cls),
-            file_secret_settings,
         )
 
 

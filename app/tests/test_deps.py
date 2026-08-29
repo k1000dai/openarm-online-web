@@ -12,47 +12,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pytest
-
-from app.deps import NotAdmin, is_admin, require_admin
-from app.models import User
-from app.settings import AllowListSettings, settings
+from app.deps import may_teleoperate
+from app.models import Runtime, Task, User
 
 
-def test_is_admin_without_user():
-    assert not is_admin(None)
+def _mujoco_task() -> Task:
+    return Task(name="task", prompt="prompt", runtime=Runtime.MUJOCO)
 
 
-def test_is_admin_empty_allow_lists(user: User):
-    assert not is_admin(user)
-
-
-def test_is_admin_allowed_user(monkeypatch, user: User):
-    monkeypatch.setattr(
-        settings, "admin", AllowListSettings(allowed_users={"TestUser"})
+def _openarm_cell_task() -> Task:
+    return Task(
+        name="task",
+        prompt="prompt",
+        runtime=Runtime.OPENARM_CELL,
+        reset_docker_tag="reset/image:latest",
     )
-    assert is_admin(user)
 
 
-def test_is_admin_allowed_org(monkeypatch, user: User):
-    monkeypatch.setattr(settings, "admin", AllowListSettings(allowed_orgs={"TestOrg"}))
-    assert is_admin(user)
+# MuJoCo runs in simulation, so anyone may teleoperate it.
+def test_may_teleoperate_mujoco_anonymous():
+    assert may_teleoperate(_mujoco_task(), None)
 
 
-def test_is_admin_not_allowed_user(monkeypatch, user: User):
-    monkeypatch.setattr(
-        settings, "admin", AllowListSettings(allowed_users={"other-user"})
-    )
-    assert not is_admin(user)
+# Every other runtime drives a real robot, so it requires logging in.
+def test_may_teleoperate_openarm_cell_anonymous():
+    assert not may_teleoperate(_openarm_cell_task(), None)
 
 
-def test_require_admin_not_allowed(user: User):
-    with pytest.raises(NotAdmin):
-        require_admin(user)
-
-
-def test_require_admin_allowed(monkeypatch, user: User):
-    monkeypatch.setattr(
-        settings, "admin", AllowListSettings(allowed_users={"testuser"})
-    )
-    assert require_admin(user) is user
+def test_may_teleoperate_openarm_cell_logged_in(user: User):
+    assert may_teleoperate(_openarm_cell_task(), user)

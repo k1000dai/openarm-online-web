@@ -13,8 +13,21 @@
 # limitations under the License.
 
 from fastapi.testclient import TestClient
+from sqlmodel import Session
 
+from app.models import Task
 from app.templates import templates
+
+
+def test_top_page_lists_teleoperation_links(
+    session: Session, tasks: list[Task], client: TestClient
+):
+    response = client.get("/")
+    assert response.status_code == 200
+    for task in tasks:
+        assert task.name in response.text
+        assert f"/tasks/{task.id}/teleoperation/keyboard" in response.text
+        assert f"/tasks/{task.id}/teleoperation/webxr" in response.text
 
 
 def test_footer_with_revision(monkeypatch, client: TestClient):

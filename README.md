@@ -23,35 +23,13 @@ cp .env.example .env
 
 Please configure the following variables according to the comments in `.env`.
 
-* `GITHUB_CLIENT_ID`
-* `GITHUB_CLIENT_SECRET`
 * `SECRET_KEY`
 * `HMAC_KEY`
 
-To get the values for `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET`,
-you need to [create a GitHub OAuth
-app](https://docs.github.com/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app).
-Here are the recommended OAuth app settings for the local environment:
-
-* Application name: `OpenArm Online local`
-* Homepage URL: `http://127.0.0.1:8000/`
-* Authorization callback URL: `http://127.0.0.1:8000/login/github/callback`
-
 For environments launched with Podman Compose, variables starting with `POSTGRES_` and `S3_` can remain unchanged.
 
-##### `config.yaml`
-
-Please copy the example file.
-
-```bash
-cp config.yaml.example config.yaml
-```
-
-By default, any logged-in user can register submissions.
-To restrict registration to specific GitHub users or organizations, edit `config.yaml` and fill in the allow lists.
-
-By default, nobody can use admin features.
-To use admin features, edit `config.yaml` and fill in the `admin` allow lists.
+No account setup is needed for logging in: everyone can log in as a
+guest from the login page.
 
 #### 3. Initial Setup
 
@@ -112,10 +90,6 @@ podman-compose --profile https up -d
 The server can now be accessed at `https://$(hostname).local:8443/`
 from the VR device. The certificate is self-signed, so the browser
 shows a warning to step through once.
-
-Note that logging in over HTTPS needs the GitHub OAuth app's callback
-URL to match, so use a MuJoCo runtime task, whose teleoperation needs
-no login, unless you have set that up.
 
 ### Before commit
 

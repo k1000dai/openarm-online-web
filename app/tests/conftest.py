@@ -20,8 +20,6 @@ from pathlib import Path
 import pytest
 from sqlmodel import Session, SQLModel, delete
 
-os.environ.setdefault("GITHUB_CLIENT_ID", "test-github-client-id")
-os.environ.setdefault("GITHUB_CLIENT_SECRET", "test-github-client-secret")
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
 os.environ.setdefault("HMAC_KEY", "test-hmac-key")
 os.environ.setdefault("POSTGRES_DB", "openarm_online_test")
@@ -55,7 +53,7 @@ from app.models import (
     WebRTCOffer,
 )
 from app.s3 import _client
-from app.settings import AllowListSettings, settings
+from app.settings import settings
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
@@ -119,14 +117,6 @@ def fixture_client(session: Session, user: User, api_key: ApiKey):
     app.dependency_overrides.clear()
 
 
-# Makes "testuser" (the `client` fixture's logged-in user) an admin.
-@pytest.fixture(name="admin")
-def fixture_admin(monkeypatch):
-    monkeypatch.setattr(
-        settings, "admin", AllowListSettings(allowed_users={"testuser"})
-    )
-
-
 @pytest.fixture(name="tasks")
 def fixture_tasks(session: Session) -> list[Task]:
     data = json.loads((FIXTURES_DIR / "task.json").read_text())
@@ -146,20 +136,6 @@ def fixture_api_key(session: Session) -> ApiKey:
 
 @pytest.fixture(name="user")
 def fixture_user(session: Session) -> User:
-    user = crud.create_user(
-        session=session,
-        github_id=1,
-        login_name="testuser",
-        organizations=[{"github_id": 10, "login": "testorg"}],
-    )
+    user = crud.create_guest_user(session=session)
     session.commit()
     return user
-
-
-@pytest.fixture(name="submission")
-def fixture_submission(session: Session, user: User, tasks: list[Task]) -> Submission:
-    submission = crud.create_submission(
-        session=session, user=user, task_id=tasks[0].id, docker_tag="test/image:latest"
-    )
-    session.commit()
-    return submission

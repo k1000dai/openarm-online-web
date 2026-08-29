@@ -37,7 +37,6 @@ services:
     volumes:
       - ./app:/src/app
       - ./scripts:/src/scripts
-      - ./config.yaml:/src/config.yaml
     environment:
       # Trust X-Forwarded-* headers from the "https" reverse proxy so
       # that generated URLs use its scheme and host.

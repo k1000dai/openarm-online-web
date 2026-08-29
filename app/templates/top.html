@@ -4,25 +4,27 @@
   <section class="openarm-hero">
     <h1>{{ site_name }}</h1>
     <p>
-      Submit your policy, run it against OpenArm tasks, and compare results
-      on the leaderboard.
+      Teleoperate OpenArm from your browser, with your keyboard or a VR
+      headset.
     </p>
-    <div class="openarm-hero-actions">
-      {% if current_user and is_admin(current_user) %}
-        <a href="{{ url_for('list_tasks_page') }}" role="button">Browse tasks</a>
-        <a href="{{ url_for('list_submissions_by_user_page', id=current_user.id) }}"
-           role="button"
-           class="secondary outline">My submissions</a>
-      {% else %}
-        <ul>
-          <li>
-            <a href="{{ url_for('teleoperation_keyboard_page', task_id=1) }}">MuJoCo Keyboard</a>
-          </li>
-          <li>
-            <a href="{{ url_for('teleoperation_webxr_page', task_id=1) }}">MuJoCo VR</a>
-          </li>
-        </ul>
-      {% endif %}
-    </div>
+  </section>
+  <section>
+    {% for task in tasks %}
+      <article>
+        <hgroup>
+          <h2>{{ task.name }}</h2>
+          <p>{{ task.prompt }}</p>
+        </hgroup>
+        <div class="openarm-hero-actions">
+          <a href="{{ url_for('teleoperation_keyboard_page', task_id=task.id) }}"
+             role="button">Keyboard</a>
+          <a href="{{ url_for('teleoperation_webxr_page', task_id=task.id) }}"
+             role="button"
+             class="secondary outline">VR</a>
+        </div>
+      </article>
+    {% else %}
+      <p>No tasks are registered yet.</p>
+    {% endfor %}
   </section>
 {% endblock %}

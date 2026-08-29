@@ -36,7 +36,7 @@ def _anonymous_client() -> TestClient:
 
 
 # The `tasks` fixture defaults to the OpenArm Cell runtime, whose
-# teleoperation is admin only. Turn a task into a MuJoCo one to
+# teleoperation requires logging in. Turn a task into a MuJoCo one to
 # exercise the open path.
 def _make_mujoco(session: Session, task: Task) -> None:
     task.runtime = Runtime.MUJOCO
@@ -110,21 +110,15 @@ def test_teleoperation_webxr_page_openarm_cell_by_anonymous(
     assert response.headers["location"] == "/login"
 
 
-def test_teleoperation_webxr_page_openarm_cell_by_non_admin(
+def test_teleoperation_webxr_page_openarm_cell_by_logged_in(
     session: Session, tasks: list[Task], client: TestClient
-):
-    response = client.get(f"/tasks/{tasks[0].id}/teleoperation/webxr")
-    assert response.status_code == 403
-
-
-def test_teleoperation_webxr_page_openarm_cell_by_admin(
-    admin, session: Session, tasks: list[Task], client: TestClient
 ):
     response = client.get(f"/tasks/{tasks[0].id}/teleoperation/webxr")
     assert response.status_code == 200
 
 
-# OpenArm Cell teleoperation drives a real robot, so it is admin only.
+# OpenArm Cell teleoperation drives a real robot, so it requires
+# logging in.
 def test_teleoperation_keyboard_page_openarm_cell_by_anonymous(
     session: Session, tasks: list[Task]
 ):
@@ -133,32 +127,23 @@ def test_teleoperation_keyboard_page_openarm_cell_by_anonymous(
     assert response.headers["location"] == "/login"
 
 
-def test_teleoperation_keyboard_page_openarm_cell_by_non_admin(
+def test_teleoperation_keyboard_page_openarm_cell_by_logged_in(
     session: Session, tasks: list[Task], client: TestClient
-):
-    response = client.get(f"/tasks/{tasks[0].id}/teleoperation/keyboard")
-    assert response.status_code == 403
-
-
-def test_teleoperation_keyboard_page_openarm_cell_by_admin(
-    admin, session: Session, tasks: list[Task], client: TestClient
 ):
     response = client.get(f"/tasks/{tasks[0].id}/teleoperation/keyboard")
     assert response.status_code == 200
 
 
-def test_create_offer_openarm_cell_by_non_admin(
-    session: Session, tasks: list[Task], client: TestClient
-):
-    response = client.post(
+def test_create_offer_openarm_cell_by_anonymous(session: Session, tasks: list[Task]):
+    response = _anonymous_client().post(
         f"/tasks/{tasks[0].id}/teleoperation/keyboard/offers",
         json={"sdp": "offer-sdp"},
     )
     assert response.status_code == 403
 
 
-def test_create_offer_openarm_cell_by_admin(
-    admin, session: Session, tasks: list[Task], client: TestClient
+def test_create_offer_openarm_cell_by_logged_in(
+    session: Session, tasks: list[Task], client: TestClient
 ):
     response = client.post(
         f"/tasks/{tasks[0].id}/teleoperation/keyboard/offers",
@@ -167,14 +152,22 @@ def test_create_offer_openarm_cell_by_admin(
     assert response.status_code == 200
 
 
-def test_claim_answer_openarm_cell_by_non_admin(
+def test_claim_answer_openarm_cell_by_anonymous(session: Session, tasks: list[Task]):
+    offer = _create_offer(session, tasks[0])
+    response = _anonymous_client().post(
+        f"/tasks/{tasks[0].id}/teleoperation/keyboard/offers/{offer.id}/answer/claim"
+    )
+    assert response.status_code == 403
+
+
+def test_claim_answer_openarm_cell_by_logged_in(
     session: Session, tasks: list[Task], client: TestClient
 ):
     offer = _create_offer(session, tasks[0])
     response = client.post(
         f"/tasks/{tasks[0].id}/teleoperation/keyboard/offers/{offer.id}/answer/claim"
     )
-    assert response.status_code == 403
+    assert response.status_code == 204
 
 
 def test_create_offer(session: Session, tasks: list[Task]):
