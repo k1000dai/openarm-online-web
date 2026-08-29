@@ -61,11 +61,12 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 ENV MUJOCO_GL=osmesa
 
 # The server is teleoperation only: no job queue to poll, and the
-# MuJoCo pedestal dataflows as defaults. .env.runner can override
-# these, e.g. to drive the real pedestal robot.
+# MuJoCo cell dataflows as defaults (the released openarm-mujoco cell
+# scene has the head cameras the browser view streams; the pedestal
+# scene doesn't yet). .env.runner can override these.
 ENV JOBS_ENABLED=false
-ENV DEFAULT_KEYBOARD_TELEOPERATION_DATAFLOW_FILE=/runner/dataflows/teleoperation/keyboard/pedestal-mujoco/dataflow.yaml
-ENV DEFAULT_WEBXR_TELEOPERATION_DATAFLOW_FILE=/runner/dataflows/teleoperation/webxr/pedestal-mujoco/dataflow.yaml
+ENV DEFAULT_KEYBOARD_TELEOPERATION_DATAFLOW_FILE=/runner/dataflows/teleoperation/keyboard/mujoco/dataflow.yaml
+ENV DEFAULT_WEBXR_TELEOPERATION_DATAFLOW_FILE=/runner/dataflows/teleoperation/webxr/mujoco/dataflow.yaml
 
 RUN uv run dora build "${DEFAULT_KEYBOARD_TELEOPERATION_DATAFLOW_FILE}" --uv \
     && uv run dora build "${DEFAULT_WEBXR_TELEOPERATION_DATAFLOW_FILE}" --uv
